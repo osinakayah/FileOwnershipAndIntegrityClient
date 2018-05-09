@@ -1,0 +1,112 @@
+
+<!DOCTYPE	html>
+<html	lang="en">
+<head>
+    <meta	name="viewport"	content="width=device-width,	initial-scale=1,	shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+<div	class="container">
+    <div	class="row">
+        <div	class="col-md-6	offset-md-3	text-xs-center">
+            <br>
+            <h3>Upload	any	file</h3>
+            <br>
+            <div>
+                <div	class="form-group">
+                    <label	class="custom-file	text-xs-left">
+                        <input	type="file"	id="file"	class="custom-file-input">
+                        <span	class="custom-file-control"></span>
+                    </label>
+                </div>
+                <div	class="form-group">
+                    <label	for="owner">Enter	owner	name</label>
+                    <input	type="text"	class="form-control"	id="owner">
+                </div>
+                <button	onclick="submit()"	class="btn	btn-primary">Submit</button>
+                <button	onclick="getInfo()"	class="btn	btn-primary">Get	Info</button>
+                <br><br>
+                <div	class="alert	alert-info"	role="alert"	id="message">
+                    You	can	either	submit	file's	details	or	get	information	about	it.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div	class="row">
+        <div	class="col-md-6	offset-md-3	text-xs-center">
+            <br>
+            <h3>Live	Transactions	Mined</h3>
+            <br>
+            <ol	id="events_list">No	Transaction	Found</ol>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha1/0.6.0/sha1.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    function	submit()
+    {
+        var	file	=	document.getElementById("file").files[0];
+        if(file)
+        {
+            var	owner	=	document.getElementById("owner").value;
+            if(owner	==	"")
+            {
+                alert("Please	enter	owner	name");
+            }
+            else
+            {
+                var	reader	=	new	FileReader();
+                reader.onload	=	function	(event)	{
+                    var	hash	=	sha1(event.target.result);
+                    $.get("/submit?hash="	+	hash	+	"&owner="	+	owner,	function(data){
+                        if(data	==	"Error")
+                        {
+                            $("#message").text("An	error	occured.");
+                        }
+                        else
+                        {
+                            $("#message").html("Transaction	hash:	"	+	data);
+                        }
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        else
+        {
+            alert("Please	select	a	file");
+        }
+    }
+    function	getInfo()
+    {
+        var	file	=	document.getElementById("file").files[0];
+        if(file) {
+            var	reader	=	new	FileReader();
+            reader.onload	=	function	(event)	{
+                var	hash	=	sha1(event.target.result);
+
+                $.get("/getInfo?hash="	+	hash,	function(data){
+                    if(data[0]	==	0	&&	data[1]	==	"") {
+                        $("#message").html("File	not	found");
+                    }
+                    else {
+                        console.log(data);
+                        $("#message").html("Timestamp:	"	+	data[0]	+	"	Owner:	"	+	data[1]);
+                    }
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        else
+        {
+            alert("Please	select	a	file");
+        }
+    }
+</script>
+<script>
+    var socket = io();
+</script>
+</body>
+</html>
